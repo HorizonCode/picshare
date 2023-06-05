@@ -31,7 +31,8 @@ webApp.post("/sharex/upload", async (request, _reply) => {
       );
       console.log(`uploaded file ${randomStr}.${mediaEncoding}`)
       return fileUrl;
-    } catch (_err) {
+    } catch (err) {
+      console.log(err)
       return "error while processing file";
     }
   }
