@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "format": "deno fmt",
+    "check": "deno fmt --check && deno lint"
+  }
+}
