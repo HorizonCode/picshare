@@ -2,8 +2,37 @@ import { HTTPServer } from "https://deno.land/x/rapid@v0.2.2/mod.ts";
 import * as cryptoString from "https://deno.land/x/crypto_random_string@1.1.0/mod.ts";
 import * as path from "https://deno.land/std@0.190.0/path/mod.ts";
 import { fileExists } from "./fileUtils.ts";
+import nanomatch from 'npm:nanomatch';
 
 const webApp = new HTTPServer(false);
+
+const getDirFiles = async (dir: string) : Promise<Array<string>> => {
+  const fileNames = new Array<string>();
+  const files = Deno.readDir(path.join(Deno.cwd(), dir));
+  for await(const file of files) {
+    fileNames.push(file.name);
+  }
+
+  return fileNames;
+}
+
+webApp.get('/:fileHash', async (req, _rep) => {
+  let file = req.pathParam("fileHash");
+  const dirFiles = await getDirFiles("pub");
+  const yes = nanomatch(dirFiles, `${file}.*`);
+  if(yes.length > 0) file = yes[0];
+  const filePath = path.join(Deno.cwd(), "pub", file);
+  const fileCheck = await fileExists(filePath);
+  if (!fileCheck) return `file ${file} found!`;
+  try{
+  const fileContents = Deno.open(filePath, { read: true });
+
+  return (await fileContents).readable;
+  }catch(err){
+    return "could not read file.";
+  }
+
+})
 
 webApp.post("/sharex/upload", async (request, _reply) => {
   const fileBlob = await request.blob();
@@ -16,7 +45,7 @@ webApp.post("/sharex/upload", async (request, _reply) => {
     switch (mediaType) {
       case "text": {
         let randomStr = cryptoString.cryptoRandomString({ length: 16 });
-        const fileUrl = `http://${request.header("host")}/data/${randomStr}.txt`;
+        const fileUrl = `http://${request.header("host")}/${randomStr}`;
         while (await fileExists(path.join(Deno.cwd(), "pub", `${randomStr}.txt`))) {
           console.log("file exists, generating new random string");
           randomStr = cryptoString.cryptoRandomString({ length: 16 });
@@ -37,7 +66,7 @@ webApp.post("/sharex/upload", async (request, _reply) => {
       }
       case "image": {
         let randomStr = cryptoString.cryptoRandomString({ length: 16 });
-        const fileUrl = `http://${request.header("host")}/data/${randomStr}.${mediaEncoding}`;
+        const fileUrl = `http://${request.header("host")}/${randomStr}`;
         //Avoid same file names, lmao
         while (await fileExists(path.join(Deno.cwd(), "pub", `${randomStr}.${mediaEncoding}`))) {
           console.log("file exists, generating new random string");
@@ -66,6 +95,4 @@ webApp.post("/sharex/upload", async (request, _reply) => {
 
 webApp.listen({
   port: 8081,
-  staticLocalDir: "/pub",
-  staticServePath: "/data",
 });
