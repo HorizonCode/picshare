@@ -15,11 +15,15 @@ webApp.post("/sharex/upload", async (request, _reply) => {
   if (mediaType != "image") return "invalid filetype!";
   const mediaEncoding = fileArgs[1];
   if (fileBlob) {
-    await Deno.writeFile(
-      path.join(Deno.cwd(), "pub", `${randomStr}.${mediaEncoding}`),
-      fileBlob.stream(),
-    );
-    return fileUrl;
+    try {
+      await Deno.writeFile(
+        path.join(Deno.cwd(), "pub", `${randomStr}.${mediaEncoding}`),
+        fileBlob.stream(),
+      );
+      return fileUrl;
+    } catch (_err) {
+      return "error while processing file";
+    }
   }
   return "error";
 });
