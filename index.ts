@@ -72,6 +72,7 @@ webApp.post("/sharex/upload", async (request, _reply) => {
           return "error while processing file";
         }
       }
+      case "video":
       case "image": {
         let randomStr = cryptoString.cryptoRandomString({ length: 16 });
         const fileUrl = `http://${request.header("host")}/${randomStr}`;
