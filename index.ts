@@ -27,9 +27,8 @@ webApp.get("/:fileHash", async (req, _rep) => {
   const fileCheck = await fileExists(filePath);
   if (!fileCheck) return `file ${file} found!`;
   try {
-    const fileContents = Deno.open(filePath, { read: true });
-
-    return (await fileContents).readable;
+    const fileContents = await Deno.open(filePath, { read: true });
+    return fileContents.readable;
   } catch (err) {
     console.log(err);
     return "could not read file.";
@@ -100,7 +99,11 @@ webApp.post("/sharex/upload", async (request, _reply) => {
             fileBlob.stream(),
           );
           console.log(`uploaded file ${randomStr}.${mediaEncoding}`);
-          return fileUrl;
+          return {
+            response: {
+              url: fileUrl
+            }
+          };;
         } catch (err) {
           console.log(err);
           return "error while processing file";
