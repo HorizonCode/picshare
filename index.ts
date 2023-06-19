@@ -6,6 +6,10 @@ import nanomatch from "npm:nanomatch";
 
 const uploadFolder = "upload";
 
+if (!(await fileExists(path.join(Deno.cwd(), uploadFolder)))) {
+  await Deno.mkdir(path.join(Deno.cwd(), uploadFolder));
+}
+
 const webApp = new HTTPServer(false);
 
 const getDirFiles = async (dir: string): Promise<Array<string>> => {
